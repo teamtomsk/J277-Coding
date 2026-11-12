@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sequence &amp; Selection · Python lab</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f2f5f7;color:#172f42;font:17px/1.55 system-ui,sans-serif}header{background:#172f42;color:white;padding:18px max(18px,calc((100vw - 980px)/2))}header strong{font-size:1.35rem;color:#dbfb90}nav,.actions{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}button,select{font:inherit;border:1px solid #adbec8;border-radius:8px;padding:8px 13px;background:white;color:#172f42;cursor:pointer}nav button{background:#243e52;color:white}nav [aria-current=step]{color:#172f42;background:#dbfb90}button:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #d77c12;outline-offset:2px}button:disabled{opacity:.5;cursor:default}.primary{background:#175bb1;color:white}main{max-width:1016px;margin:auto;padding:24px 18px 48px}h1{font-size:clamp(1.8rem,4vw,2.7rem);line-height:1.15;margin:12px 0}h2{font-size:1.18rem;margin:0 0 10px}.card{background:white;border:1px solid #d5dfe5;border-radius:16px;padding:20px;margin:16px 0}.grid{display:grid;grid-template-columns:1.3fr 1fr;gap:20px}.source,.console{background:#142b3d;color:#f2f8fc;border-radius:10px;padding:12px;overflow:auto;font:1rem/1.7 ui-monospace,Consolas,monospace}.line{display:block;white-space:pre;padding:2px 6px;border-left:4px solid transparent}.live{border-color:#dbfb90;background:#385267}.num{color:#c1d3df;font-size:.8em;user-select:none}.console{white-space:pre-wrap;min-height:52px}.note{background:#e8f3f5;border-left:4px solid #197777;padding:12px}.memory{font-weight:650}.choices button{margin:3px}.choices [aria-pressed=true]{background:#dbfb90}summary{cursor:pointer;font-weight:650}pre{white-space:pre-wrap}p{margin:8px 0 14px}.small{color:#476173}section[hidden]{display:none}@media(max-width:700px){.grid{grid-template-columns:1fr}.card{padding:14px}nav button{font-size:.9rem}}
+</style></head>
+<body><header><strong>Python lab</strong><div>Year 10 · Sequence &amp; selection</div><nav aria-label="Activities"></nav></header>
+<main><section id="lesson"><h1 id="title"></h1><p id="brief"></p>
+<div class="card"><div id="settings"></div><div class="grid"><div><h2>Python</h2><div class="source" id="source"></div></div><div><h2 id="question"></h2><div class="choices" id="predictions"></div><p id="feedback" role="status"></p></div></div>
+<div class="actions"><button id="step" class="primary">Run first line</button><button id="reset">Start again</button></div><p id="explain" class="note" role="status"></p><div class="grid"><div><h2>Stored value</h2><p class="memory" id="memory"></p></div><div><h2>Output</h2><div class="console" id="output" aria-live="polite"></div></div></div></div><button id="next">Continue →</button></section>
+<section id="transfer" hidden><h1>Try it in Python</h1><p>Open your class Python IDE on Code.org. Try these short programs one at a time. Use <strong>Run</strong> after each change.</p>
+<div id="tasks"></div><div class="card"><h2>Your turn · Open the gate</h2><p>Write a program that stores a number in <code>keys</code>. If the player has at least two keys, print <code>Gate open</code>. Otherwise print <code>Find a key</code>. After either route, print <code>Keep exploring</code>.</p><p>Test with 1, 2 and 3 keys. Before each run, say which two messages you expect.</p><details><summary>Hint</summary><p>Start with <code>keys = 1</code>. Use <code>if keys &gt;= 2:</code> for the decision. Line up the last print with the if.</p></details><details><summary>Check against one solution</summary><pre class="source" id="solution"></pre></details></div></section></main>
+<script>
+const id = name => document.getElementById(name);
+const stages = [
+  ['Sequence','Run lines in order','A player starts with some points and earns one more. Predict the final number, then run one line at a time.'],
+  ['One decision','Add a bonus message','The game now makes a decision. The condition points >= 5 asks whether the player has at least five points. Try a starting value of 3, then 4.'],
+  ['Two routes','Choose between two messages','An else gives the game something to say when the condition is false. Follow both routes and look for the line they share.'],
+  ['Try it in Python']
+];
+let stage = 0, start = 3, position = -1, trace = [];
+function program(stage, start) {
+  const lines = ['points = ' + start, 'points = points + 1'];
+  if (stage === 0) return [...lines,'print(points)'];
+  lines.push('if points >= 5:', '    print("Bonus!")');
+  if (stage === 2) lines.push('else:', '    print("Keep trying")');
+  return [...lines,'print("Round over")'];
+}
+function steps(stage, start) {
+  const points = start + 1;
+  const result = [
+    [0,start,'','Store the starting number in points.'],
+    [1,points,'','Read the old value, add 1, then store the result back in points.']
+  ];
+  if (!stage) return [...result,[2,points,String(points),'print shows the stored number in the output.']];
+  const passes = points >= 5;
+  result.push([2,points,'',points+' >= 5 is '+(passes?'True. Run the indented line.':stage===1?'False. Skip the indented line.':'False. Follow the else route.')]);
+  if (passes) result.push([3,points,'Bonus!','This message belongs to the True route.']);
+  else if (stage===2) result.push([5,points,'Keep trying','The else block runs because the condition was False.']);
+  result.push([stage===1?4:6,points,'Round over','This print starts at the left edge. It runs after the decision on either route.']);
+  return result;
+}
+function element(tag,content) {
+  const item=document.createElement(tag);
+  item.textContent=content;
+  return item;
+}
+function draw() {
+  const current=trace[position];
+  id('source').replaceChildren();
+  program(stage,start).forEach((text,index)=>{
+    const row=element('span','');
+    row.className='line'+(current && current[0]===index?' live':'');
+    row.append(element('span',String(index+1).padStart(2)+'  '));
+    row.firstChild.className='num';
+    row.append(document.createTextNode(text));
+    id('source').append(row);
+  });
+  id('explain').textContent=current?'Line '+(current[0]+1)+' · '+current[3]:'Choose a prediction, then select Run first line.';
+  id('memory').textContent=current?'points = '+current[1]:'points has no value yet.';
+  id('output').textContent=trace.slice(0,position+1).map(s=>s[2]).filter(Boolean).join('\n')||'—';
+  id('step').disabled=position===trace.length-1;
+  id('step').textContent=position<0?'Run first line':id('step').disabled?'Run complete':'Run next line';
+}
+function restart() {
+  position=-1;
+  trace=steps(stage,start);
+  id('feedback').textContent='';
+  id('question').textContent=stage===0?'Which number will print?':stage===1?'Will “Bonus!” print?':'Which message prints first?';
+  const options=stage===0?['3','4','5']:stage===1?['Yes','No']:['Bonus!','Keep trying','Round over'];
+  const answer=stage===0?String(start+1):stage===1?(start+1>=5?'Yes':'No'):(start+1>=5?'Bonus!':'Keep trying');
+  id('predictions').replaceChildren();
+  options.forEach(o=>{
+    const b=element('button',o);
+    b.onclick=()=>{
+      for(const item of id('predictions').children)item.setAttribute('aria-pressed',item===b);
+      id('feedback').textContent=o===answer?'Correct. Follow the lines to see why.':'Trace the value of points after line 2, then try again.';
+    };
+    id('predictions').append(b);
+  });
+  draw();
+}
+function show(index) {
+  stage=index;
+  const practical=index===3;
+  id('lesson').hidden=practical;
+  id('transfer').hidden=!practical;
+  [...document.querySelector('nav').children].forEach((b,i)=>b.setAttribute('aria-current',i===index?'step':'false'));
+  if(!practical){
+    start=stage===2?4:3;
+    id('title').textContent=stages[index][1];
+    id('brief').textContent=stages[index][2];
+    id('settings').replaceChildren();
+    if(stage>0){
+      const label=element('label','Starting points ');
+      const select=document.createElement('select');
+      for(const v of [3,4,5])select.add(new Option(String(v),String(v)));
+      select.value=String(start);
+      select.onchange=()=>{start=Number(select.value);restart()};
+      label.append(select);
+      id('settings').append(label);
+    }
+    restart();
+  }
+  window.scrollTo(0,0);
+}
+stages.forEach(([name],i)=>{
+  const b=element('button',name);
+  b.onclick=()=>show(i);
+  document.querySelector('nav').append(b);
+});
+id('reset').onclick=restart;
+id('step').onclick=()=>{if(position<trace.length-1){position++;draw()}};
+id('next').onclick=()=>show(stage+1);
+const tasks=[
+  ['1. Type the sequence',0,'Run it with 3 starting points. You should see 4. Change the first line to start with 6. Predict the output, then run it again.'],
+  ['2. Add one decision',1,'Replace your program with this version. Type the colon at the end of the if line. Use four spaces before the bonus print. Try starting with 3 and then 4.'],
+  ['3. Add the other route',2,'Insert else and its indented print into your program as shown. Start with 3, then 4. Check that Round over appears both times.']
+];
+for(const [title,index,instruction] of tasks){
+  const card=element('div','');
+  card.className='card';
+  const code=element('pre',program(index,3).join('\n'));
+  code.className='source';
+  card.append(element('h2',title),element('p',instruction),code);
+  id('tasks').append(card);
+}
+id('solution').textContent='keys = 1\nif keys >= 2:\n    print("Gate open")\nelse:\n    print("Find a key")\nprint("Keep exploring")';
+show(0);
+</script></body></html>
